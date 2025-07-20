@@ -1,0 +1,486 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\slleading20\partightenfactor0
+
+\f0\fs26 \cf0 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\
+    <title>Vibe Check</title>\
+    <style>\
+        * \{\
+            margin: 0;\
+            padding: 0;\
+            box-sizing: border-box;\
+            -webkit-tap-highlight-color: transparent;\
+        \}\
+        \
+        body \{\
+            background: #000;\
+            color: #fff;\
+            font-family: -apple-system, system-ui, sans-serif;\
+            height: 100vh;\
+            overflow: hidden;\
+        \}\
+        \
+        #setup \{\
+            padding: 20px;\
+            display: flex;\
+            flex-direction: column;\
+            gap: 20px;\
+            height: 100vh;\
+            justify-content: center;\
+        \}\
+        \
+        #setup input \{\
+            background: #222;\
+            border: 2px solid #444;\
+            color: #fff;\
+            padding: 15px;\
+            font-size: 18px;\
+            border-radius: 10px;\
+        \}\
+        \
+        #setup button \{\
+            background: #4CAF50;\
+            border: none;\
+            color: #000;\
+            padding: 20px;\
+            font-size: 20px;\
+            font-weight: bold;\
+            border-radius: 10px;\
+            cursor: pointer;\
+        \}\
+        \
+        #viewer \{\
+            display: none;\
+            height: 100vh;\
+            padding: 10px;\
+            gap: 10px;\
+            grid-template-columns: 1fr 1fr;\
+            grid-template-rows: 1fr 1fr;\
+        \}\
+        \
+        .reaction-btn \{\
+            border: none;\
+            border-radius: 20px;\
+            font-size: 60px;\
+            cursor: pointer;\
+            transition: transform 0.1s;\
+            display: flex;\
+            align-items: center;\
+            justify-content: center;\
+            user-select: none;\
+        \}\
+        \
+        .reaction-btn:active \{\
+            transform: scale(0.95);\
+        \}\
+        \
+        #love \{ background: #FF6B6B; \}\
+        #funny \{ background: #FFD93D; \}\
+        #sad \{ background: #6BCBFF; \}\
+        #dislike \{ background: #4A4A4A; \}\
+        \
+        #results \{\
+            display: none;\
+            padding: 20px;\
+            height: 100vh;\
+            overflow-y: auto;\
+        \}\
+        \
+        .result-section \{\
+            margin-bottom: 30px;\
+            background: #111;\
+            padding: 15px;\
+            border-radius: 10px;\
+        \}\
+        \
+        .reaction-bar \{\
+            background: #333;\
+            height: 30px;\
+            margin: 5px 0;\
+            border-radius: 5px;\
+            position: relative;\
+            overflow: hidden;\
+        \}\
+        \
+        .reaction-fill \{\
+            height: 100%;\
+            transition: width 0.3s;\
+        \}\
+        \
+        #end-btn \{\
+            position: fixed;\
+            top: 10px;\
+            right: 10px;\
+            background: #666;\
+            border: none;\
+            color: #fff;\
+            padding: 10px 15px;\
+            border-radius: 5px;\
+            font-size: 14px;\
+        \}\
+        \
+        #counter \{\
+            position: fixed;\
+            top: 10px;\
+            left: 10px;\
+            background: rgba(0,0,0,0.5);\
+            padding: 5px 10px;\
+            border-radius: 5px;\
+            font-size: 12px;\
+        \}\
+        \
+        #timeline-graph \{\
+            height: 200px;\
+            background: #000;\
+            border: 1px solid #333;\
+            border-radius: 10px;\
+            position: relative;\
+            overflow-x: auto;\
+            margin-top: 10px;\
+        \}\
+        \
+        .timeline-point \{\
+            position: absolute;\
+            width: 20px;\
+            height: 20px;\
+            border-radius: 50%;\
+            transform: translate(-50%, -50%);\
+            font-size: 12px;\
+            display: flex;\
+            align-items: center;\
+            justify-content: center;\
+        \}\
+        \
+        .peak-moment \{\
+            background: #222;\
+            padding: 10px;\
+            margin: 5px 0;\
+            border-radius: 5px;\
+            border-left: 3px solid #4CAF50;\
+        \}\
+        \
+        .emotion-arc \{\
+            width: 100%;\
+            height: 150px;\
+            margin: 10px 0;\
+        \}\
+    </style>\
+</head>\
+<body>\
+    <!-- Setup Screen -->\
+    <div id="setup">\
+        <h1 style="text-align: center;">\uc0\u55356 \u57260  Quick Vibe Check</h1>\
+        <input type="text" id="viewer-name" placeholder="Your name (optional)" autocomplete="off">\
+        <input type="text" id="film-title" placeholder="Film title" autocomplete="off" value="Documentary Screening">\
+        <button onclick="startViewing()">START WATCHING</button>\
+    </div>\
+    \
+    <!-- Viewing Screen -->\
+    <div id="viewer">\
+        <button class="reaction-btn" id="love" onclick="logReaction('love', '\uc0\u10084 \u65039 ')">\u10084 \u65039 </button>\
+        <button class="reaction-btn" id="funny" onclick="logReaction('funny', '\uc0\u55357 \u56834 ')">\u55357 \u56834 </button>\
+        <button class="reaction-btn" id="sad" onclick="logReaction('sad', '\uc0\u55357 \u56866 ')">\u55357 \u56866 </button>\
+        <button class="reaction-btn" id="dislike" onclick="logReaction('dislike', '\uc0\u55357 \u56468 ')">\u55357 \u56468 </button>\
+        <button id="end-btn" onclick="endViewing()">End</button>\
+        <div id="counter">0</div>\
+    </div>\
+    \
+    <!-- Results Screen -->\
+    <div id="results">\
+        <h2>\uc0\u55356 \u57260  Screening Analysis</h2>\
+        <div id="results-content"></div>\
+        <button onclick="exportData()" style="background: #4CAF50; border: none; color: #000; padding: 15px; width: 100%; border-radius: 10px; font-size: 18px; margin-top: 20px;">\
+            \uc0\u55357 \u56522  Export Full Data\
+        </button>\
+        <button onclick="location.reload()" style="background: #666; border: none; color: #fff; padding: 15px; width: 100%; border-radius: 10px; font-size: 18px; margin-top: 10px;">\
+            \uc0\u55357 \u56580  New Screening\
+        </button>\
+    </div>\
+    \
+    <script>\
+        let reactions = [];\
+        let startTime = null;\
+        let viewerName = '';\
+        let filmTitle = '';\
+        let autoEndTimer = null;\
+        \
+        function startViewing() \{\
+            viewerName = document.getElementById('viewer-name').value || 'Anonymous';\
+            filmTitle = document.getElementById('film-title').value || 'Untitled';\
+            \
+            startTime = Date.now();\
+            reactions = [];\
+            \
+            document.getElementById('setup').style.display = 'none';\
+            document.getElementById('viewer').style.display = 'grid';\
+            \
+            // Try to prevent sleep on mobile (might not work from Drive/Dropbox)\
+            if ('wakeLock' in navigator) \{\
+                navigator.wakeLock.request('screen').catch(() => \{\
+                    // Silently fail - wake lock not available in this context\
+                \});\
+            \}\
+            \
+            // Start auto-end timer\
+            resetAutoEndTimer();\
+        \}\
+        \
+        function resetAutoEndTimer() \{\
+            if (autoEndTimer) clearTimeout(autoEndTimer);\
+            // Auto-end after 5 minutes of no activity\
+            autoEndTimer = setTimeout(() => \{\
+                endViewing();\
+            \}, 5 * 60 * 1000);\
+        \}\
+        \
+        function logReaction(type, emoji) \{\
+            const reaction = \{\
+                type: type,\
+                emoji: emoji,\
+                timestamp: Date.now() - startTime,\
+                realTime: new Date().toISOString()\
+            \};\
+            \
+            reactions.push(reaction);\
+            \
+            // Update counter\
+            document.getElementById('counter').textContent = reactions.length;\
+            \
+            // Visual feedback\
+            const btn = document.getElementById(type);\
+            btn.style.transform = 'scale(1.1)';\
+            setTimeout(() => \{\
+                btn.style.transform = 'scale(1)';\
+            \}, 200);\
+            \
+            // Haptic feedback if available\
+            if ('vibrate' in navigator) \{\
+                navigator.vibrate(50);\
+            \}\
+            \
+            // Reset auto-end timer\
+            resetAutoEndTimer();\
+        \}\
+        \
+        function endViewing() \{\
+            if (autoEndTimer) clearTimeout(autoEndTimer);\
+            const totalTime = Date.now() - startTime;\
+            showResults(totalTime);\
+        \}\
+        \
+        function showResults(totalTime) \{\
+            document.getElementById('viewer').style.display = 'none';\
+            document.getElementById('results').style.display = 'block';\
+            \
+            // Count reactions\
+            const counts = \{\
+                love: reactions.filter(r => r.type === 'love').length,\
+                funny: reactions.filter(r => r.type === 'funny').length,\
+                sad: reactions.filter(r => r.type === 'sad').length,\
+                dislike: reactions.filter(r => r.type === 'dislike').length\
+            \};\
+            \
+            const total = reactions.length;\
+            \
+            // Find peak moments (clusters of reactions)\
+            const peaks = findPeakMoments(reactions, totalTime);\
+            \
+            // Calculate engagement score\
+            const engagementScore = calculateEngagement(reactions, totalTime);\
+            \
+            // Build results HTML\
+            let html = `\
+                <div class="result-section">\
+                    <h3>\uc0\u55357 \u56573 \u65039  $\{filmTitle\}</h3>\
+                    <p>\uc0\u55357 \u56420  Viewer: $\{viewerName\}</p>\
+                    <p>\uc0\u9201 \u65039  Duration: $\{formatTime(totalTime)\}</p>\
+                    <p>\uc0\u55357 \u56390  Total reactions: $\{total\}</p>\
+                    <p>\uc0\u55357 \u56495  Engagement Score: $\{engagementScore\}%</p>\
+                </div>\
+                \
+                <div class="result-section">\
+                    <h3>\uc0\u55357 \u56842  Emotional Breakdown</h3>\
+                    $\{createBar('\uc0\u10084 \u65039  Love', counts.love, total, '#FF6B6B')\}\
+                    $\{createBar('\uc0\u55357 \u56834  Funny', counts.funny, total, '#FFD93D')\}\
+                    $\{createBar('\uc0\u55357 \u56866  Sad', counts.sad, total, '#6BCBFF')\}\
+                    $\{createBar('\uc0\u55357 \u56468  Dislike', counts.dislike, total, '#4A4A4A')\}\
+                </div>\
+                \
+                <div class="result-section">\
+                    <h3>\uc0\u55357 \u56520  Emotional Journey</h3>\
+                    <div id="timeline-graph">$\{createTimeline(reactions, totalTime)\}</div>\
+                </div>\
+                \
+                <div class="result-section">\
+                    <h3>\uc0\u55357 \u56613  Peak Moments</h3>\
+                    $\{peaks.length > 0 ? peaks.map(peak => `\
+                        <div class="peak-moment">\
+                            <strong>$\{formatTime(peak.time)\}</strong> - $\{peak.reactions\} reactions in 30s\
+                            <br><small>$\{peak.dominant\} moment</small>\
+                        </div>\
+                    `).join('') : '<p>No significant peaks detected</p>'\}\
+                </div>\
+                \
+                <div class="result-section">\
+                    <h3>\uc0\u55357 \u56541  Complete Timeline</h3>\
+                    <div style="max-height: 200px; overflow-y: auto; background: #000; padding: 10px; border-radius: 10px;">\
+                        $\{reactions.map(r => \
+                            `<div style="margin: 2px 0;">$\{formatTime(r.timestamp)\} - $\{r.emoji\}</div>`\
+                        ).join('')\}\
+                    </div>\
+                </div>\
+            `;\
+            \
+            document.getElementById('results-content').innerHTML = html;\
+        \}\
+        \
+        function createTimeline(reactions, totalTime) \{\
+            if (reactions.length === 0) return '<p style="padding: 20px;">No reactions to display</p>';\
+            \
+            const width = Math.max(800, totalTime / 1000); // 1px per second, min 800px\
+            let html = `<svg width="$\{width\}" height="200" style="min-width: 100%;">`;\
+            \
+            // Draw time axis\
+            html += `<line x1="0" y1="180" x2="$\{width\}" y2="180" stroke="#333" stroke-width="2"/>`;\
+            \
+            // Draw time markers every minute\
+            const minutes = Math.floor(totalTime / 60000);\
+            for (let i = 0; i <= minutes; i++) \{\
+                const x = (i * 60000 / totalTime) * width;\
+                html += `<line x1="$\{x\}" y1="175" x2="$\{x\}" y2="185" stroke="#666" stroke-width="1"/>`;\
+                html += `<text x="$\{x\}" y="195" fill="#666" text-anchor="middle" font-size="10">$\{i\}m</text>`;\
+            \}\
+            \
+            // Plot reactions\
+            reactions.forEach(r => \{\
+                const x = (r.timestamp / totalTime) * width;\
+                const y = getYPosition(r.type);\
+                const color = getReactionColor(r.type);\
+                \
+                html += `<circle cx="$\{x\}" cy="$\{y\}" r="8" fill="$\{color\}" opacity="0.8"/>`;\
+                html += `<text x="$\{x\}" y="$\{y + 3\}" text-anchor="middle" font-size="10">$\{r.emoji\}</text>`;\
+            \});\
+            \
+            html += '</svg>';\
+            return html;\
+        \}\
+        \
+        function getYPosition(type) \{\
+            const positions = \{\
+                love: 40,\
+                funny: 70,\
+                sad: 100,\
+                dislike: 130\
+            \};\
+            return positions[type] || 100;\
+        \}\
+        \
+        function getReactionColor(type) \{\
+            const colors = \{\
+                love: '#FF6B6B',\
+                funny: '#FFD93D',\
+                sad: '#6BCBFF',\
+                dislike: '#4A4A4A'\
+            \};\
+            return colors[type] || '#666';\
+        \}\
+        \
+        function findPeakMoments(reactions, totalTime) \{\
+            const peaks = [];\
+            const windowSize = 30000; // 30 second windows\
+            \
+            for (let time = 0; time < totalTime; time += windowSize / 2) \{\
+                const windowReactions = reactions.filter(r => \
+                    r.timestamp >= time && r.timestamp < time + windowSize\
+                );\
+                \
+                if (windowReactions.length >= 3) \{ // At least 3 reactions in 30s\
+                    // Find dominant emotion\
+                    const types = windowReactions.reduce((acc, r) => \{\
+                        acc[r.type] = (acc[r.type] || 0) + 1;\
+                        return acc;\
+                    \}, \{\});\
+                    \
+                    const dominant = Object.entries(types)\
+                        .sort((a, b) => b[1] - a[1])[0];\
+                    \
+                    peaks.push(\{\
+                        time: time + windowSize / 2,\
+                        reactions: windowReactions.length,\
+                        dominant: dominant[0].charAt(0).toUpperCase() + dominant[0].slice(1)\
+                    \});\
+                \}\
+            \}\
+            \
+            // Return top 3 peaks\
+            return peaks\
+                .sort((a, b) => b.reactions - a.reactions)\
+                .slice(0, 3);\
+        \}\
+        \
+        function calculateEngagement(reactions, totalTime) \{\
+            // Simple engagement score: reactions per minute, capped at 100%\
+            const reactionRate = (reactions.length / (totalTime / 60000)) * 10;\
+            return Math.min(100, Math.round(reactionRate));\
+        \}\
+        \
+        function createBar(label, count, total, color) \{\
+            const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;\
+            return `\
+                <div>\
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">\
+                        <span>$\{label\}</span>\
+                        <span>$\{count\} ($\{percentage\}%)</span>\
+                    </div>\
+                    <div class="reaction-bar">\
+                        <div class="reaction-fill" style="width: $\{percentage\}%; background: $\{color\};"></div>\
+                    </div>\
+                </div>\
+            `;\
+        \}\
+        \
+        function formatTime(ms) \{\
+            const seconds = Math.floor(ms / 1000);\
+            const minutes = Math.floor(seconds / 60);\
+            const remainingSeconds = seconds % 60;\
+            return `$\{minutes\}:$\{remainingSeconds.toString().padStart(2, '0')\}`;\
+        \}\
+        \
+        function exportData() \{\
+            const data = \{\
+                screening: \{\
+                    film: filmTitle,\
+                    viewer: viewerName,\
+                    date: new Date().toISOString(),\
+                    duration: Date.now() - startTime,\
+                    totalReactions: reactions.length,\
+                    engagementScore: calculateEngagement(reactions, Date.now() - startTime)\
+                \},\
+                summary: \{\
+                    love: reactions.filter(r => r.type === 'love').length,\
+                    funny: reactions.filter(r => r.type === 'funny').length,\
+                    sad: reactions.filter(r => r.type === 'sad').length,\
+                    dislike: reactions.filter(r => r.type === 'dislike').length\
+                \},\
+                peaks: findPeakMoments(reactions, Date.now() - startTime),\
+                reactions: reactions\
+            \};\
+            \
+            const blob = new Blob([JSON.stringify(data, null, 2)], \{type: 'application/json'\});\
+            const url = URL.createObjectURL(blob);\
+            const a = document.createElement('a');\
+            a.href = url;\
+            a.download = `vibe-check-$\{filmTitle.replace(/\\s+/g, '-')\}-$\{viewerName.replace(/\\s+/g, '-')\}-$\{Date.now()\}.json`;\
+            a.click();\
+        \}\
+    </script>\
+</body>\
+</html>}
